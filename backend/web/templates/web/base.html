@@ -1,0 +1,220 @@
+{% load static %}
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}AppCentre{% endblock %}</title>
+  {% include 'web/includes/theme_init.html' %}
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="{% static 'css/app.css' %}" rel="stylesheet">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <a href="{% url 'web:home' %}">
+        <span class="brand-mark"><i class="bi bi-mortarboard-fill"></i></span>
+        <span class="brand-text">AppCentre<small>Gestion de centre</small></span>
+      </a>
+      <button class="btn btn-sm sidebar-close d-lg-none" type="button" data-sidebar-close aria-label="Fermer">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav">
+      {% if request.user.role == 'manager' or request.user.is_superuser %}
+        <span class="nav-section">Pilotage</span>
+        <a class="nav-link {% if request.path == '/manager/' %}active{% endif %}" href="{% url 'web:manager_dashboard' %}">
+          <i class="bi bi-speedometer2"></i><span>Tableau de bord</span>
+        </a>
+        <a class="nav-link {% if '/manager/students/' in request.path %}active{% endif %}" href="{% url 'web:manager_students' %}">
+          <i class="bi bi-people"></i><span>Élèves</span>
+          {% if nav_pending_students %}<span class="nav-badge">{{ nav_pending_students }}</span>{% endif %}
+        </a>
+        <a class="nav-link {% if '/manager/teachers/' in request.path %}active{% endif %}" href="{% url 'web:manager_teachers' %}">
+          <i class="bi bi-person-video3"></i><span>Enseignants</span>
+          {% if nav_pending_teachers %}<span class="nav-badge">{{ nav_pending_teachers }}</span>{% endif %}
+        </a>
+        <a class="nav-link {% if '/manager/requests/' in request.path %}active{% endif %}" href="{% url 'web:manager_requests' %}">
+          <i class="bi bi-inbox"></i><span>Demandes</span>
+          {% if nav_pending_requests %}<span class="nav-badge">{{ nav_pending_requests }}</span>{% endif %}
+        </a>
+
+        <span class="nav-section">Organisation</span>
+        <a class="nav-link {% if '/manager/subjects/' in request.path %}active{% endif %}" href="{% url 'web:manager_subjects' %}">
+          <i class="bi bi-book"></i><span>Matières</span>
+        </a>
+        <a class="nav-link {% if '/manager/classrooms/' in request.path %}active{% endif %}" href="{% url 'web:manager_classrooms' %}">
+          <i class="bi bi-door-open"></i><span>Salles</span>
+        </a>
+        <a class="nav-link {% if '/manager/classes/' in request.path %}active{% endif %}" href="{% url 'web:manager_classes' %}">
+          <i class="bi bi-diagram-3"></i><span>Classes</span>
+        </a>
+        <a class="nav-link {% if '/manager/groups/' in request.path %}active{% endif %}" href="{% url 'web:manager_groups' %}">
+          <i class="bi bi-collection"></i><span>Attributions</span>
+        </a>
+
+        <span class="nav-section">Vie scolaire</span>
+        <a class="nav-link {% if '/manager/schedule/' in request.path %}active{% endif %}" href="{% url 'web:manager_schedule' %}">
+          <i class="bi bi-calendar-week"></i><span>Emploi du temps</span>
+        </a>
+        <a class="nav-link {% if '/manager/attendance/' in request.path %}active{% endif %}" href="{% url 'web:manager_attendance' %}">
+          <i class="bi bi-clipboard-check"></i><span>Présences</span>
+        </a>
+
+      {% elif request.user.role == 'teacher' %}
+        <span class="nav-section">Pédagogie</span>
+        <a class="nav-link {% if request.path == '/teacher/' %}active{% endif %}" href="{% url 'web:teacher_dashboard' %}">
+          <i class="bi bi-speedometer2"></i><span>Tableau de bord</span>
+        </a>
+        <a class="nav-link {% if '/teacher/classes/' in request.path %}active{% endif %}" href="{% url 'web:teacher_classes' %}">
+          <i class="bi bi-people"></i><span>Mes classes</span>
+        </a>
+        <a class="nav-link {% if '/teacher/schedule/' in request.path %}active{% endif %}" href="{% url 'web:teacher_schedule' %}">
+          <i class="bi bi-calendar-week"></i><span>Emploi du temps</span>
+        </a>
+        <a class="nav-link {% if '/teacher/attendance/' in request.path %}active{% endif %}" href="{% url 'web:teacher_attendance' %}">
+          <i class="bi bi-clipboard-check"></i><span>Présences</span>
+        </a>
+        <a class="nav-link {% if '/teacher/quizzes/' in request.path or '/teacher/questions/' in request.path %}active{% endif %}" href="{% url 'web:teacher_quizzes' %}">
+          <i class="bi bi-ui-checks"></i><span>Quiz</span>
+          {% if nav_unread_results %}<span class="nav-badge">{{ nav_unread_results }}</span>{% endif %}
+        </a>
+        <a class="nav-link {% if '/teacher/materials/' in request.path %}active{% endif %}" href="{% url 'web:teacher_materials' %}">
+          <i class="bi bi-folder2-open"></i><span>Supports</span>
+        </a>
+
+      {% else %}
+        <span class="nav-section">Mon espace</span>
+        <a class="nav-link {% if request.path == '/student/' %}active{% endif %}" href="{% url 'web:student_dashboard' %}">
+          <i class="bi bi-speedometer2"></i><span>Tableau de bord</span>
+        </a>
+        <a class="nav-link {% if '/student/centers/' in request.path %}active{% endif %}" href="{% url 'web:student_centers' %}">
+          <i class="bi bi-buildings"></i><span>Centres</span>
+        </a>
+        <a class="nav-link {% if '/student/classes/' in request.path %}active{% endif %}" href="{% url 'web:student_classes' %}">
+          <i class="bi bi-book"></i><span>Mes cours</span>
+        </a>
+        <a class="nav-link {% if '/student/schedule/' in request.path %}active{% endif %}" href="{% url 'web:student_schedule' %}">
+          <i class="bi bi-calendar-week"></i><span>Emploi du temps</span>
+        </a>
+        <a class="nav-link {% if '/student/quizzes/' in request.path or '/student/results/' in request.path %}active{% endif %}" href="{% url 'web:student_quizzes' %}">
+          <i class="bi bi-ui-checks"></i><span>Quiz</span>
+        </a>
+        <a class="nav-link {% if '/student/materials/' in request.path %}active{% endif %}" href="{% url 'web:student_materials' %}">
+          <i class="bi bi-folder2-open"></i><span>Supports</span>
+        </a>
+      {% endif %}
+
+      <span class="nav-section">Compte</span>
+      <a class="nav-link {% if '/notifications/' in request.path %}active{% endif %}" href="{% url 'web:notifications' %}">
+        <i class="bi bi-bell"></i><span>Notifications</span>
+        {% if unread_notifications %}<span class="nav-badge">{{ unread_notifications }}</span>{% endif %}
+      </a>
+      <a class="nav-link {% if '/profile/' in request.path %}active{% endif %}" href="{% url 'web:profile' %}">
+        <i class="bi bi-person-circle"></i><span>Mon profil</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <span class="avatar avatar-sm">
+          {% if request.user.avatar %}
+            <img src="{{ request.user.avatar.url }}" alt="Avatar">
+          {% else %}
+            {{ request.user.first_name|slice:":1" }}{{ request.user.last_name|slice:":1" }}
+          {% endif %}
+        </span>
+        <span class="sidebar-user-info">
+          <strong>{{ request.user.get_full_name|default:request.user.username }}</strong>
+          <small>{{ request.user.get_role_display }}</small>
+        </span>
+      </div>
+      {% if user_center %}<span class="sidebar-center"><i class="bi bi-building"></i> {{ user_center.name }}</span>{% endif %}
+      <button class="sidebar-theme" type="button" data-theme-cycle>
+        <i class="bi bi-sun"></i><span data-theme-label>Thème : Clair</span>
+      </button>
+      <a class="sidebar-logout" href="{% url 'web:logout' %}"><i class="bi bi-box-arrow-right"></i> Déconnexion</a>
+    </div>
+  </aside>
+
+  <div class="sidebar-backdrop" data-sidebar-close></div>
+
+  <main class="app-main">
+    <header class="topbar">
+      <button class="btn btn-icon d-lg-none" type="button" data-sidebar-toggle aria-label="Menu">
+        <i class="bi bi-list"></i>
+      </button>
+      <div class="topbar-title">
+        <h1>{% block page_title %}Tableau de bord{% endblock %}</h1>
+        <p>{% block page_subtitle %}{% endblock %}</p>
+      </div>
+      <div class="topbar-actions">
+        <div class="dropdown">
+          <button class="btn btn-icon" type="button" data-bs-toggle="dropdown" data-theme-indicator aria-expanded="false" title="Choisir le thème" aria-label="Choisir le thème">
+            <i class="bi bi-sun"></i>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+            <li><h6 class="dropdown-header">Thème</h6></li>
+            <li><button class="dropdown-item theme-choice" type="button" data-theme-set="light"><i class="bi bi-sun"></i> Clair<i class="bi bi-check2 theme-check"></i></button></li>
+            <li><button class="dropdown-item theme-choice" type="button" data-theme-set="dark"><i class="bi bi-moon-stars"></i> Sombre<i class="bi bi-check2 theme-check"></i></button></li>
+            <li><button class="dropdown-item theme-choice" type="button" data-theme-set="system"><i class="bi bi-circle-half"></i> Système<i class="bi bi-check2 theme-check"></i></button></li>
+          </ul>
+        </div>
+        <a class="btn btn-icon position-relative" href="{% url 'web:notifications' %}" title="Notifications">
+          <i class="bi bi-bell"></i>
+          {% if unread_notifications %}<span class="badge-count">{{ unread_notifications }}</span>{% endif %}
+        </a>
+        <div class="dropdown">
+          <button class="btn btn-user dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <span class="avatar avatar-xs">
+              {% if request.user.avatar %}
+                <img src="{{ request.user.avatar.url }}" alt="Avatar">
+              {% else %}
+                {{ request.user.first_name|slice:":1" }}{{ request.user.last_name|slice:":1" }}
+              {% endif %}
+            </span>
+            <span class="d-none d-md-inline">{{ request.user.first_name|default:request.user.username }}</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+            <li><a class="dropdown-item" href="{% url 'web:profile' %}"><i class="bi bi-person"></i> Mon profil</a></li>
+            <li><a class="dropdown-item" href="{% url 'web:change_password' %}"><i class="bi bi-shield-lock"></i> Mot de passe</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="{% url 'web:logout' %}"><i class="bi bi-box-arrow-right"></i> Déconnexion</a></li>
+          </ul>
+        </div>
+      </div>
+    </header>
+
+    <div class="app-content">
+      {% if credentials %}
+        <div class="credentials-card">
+          <div class="credentials-icon"><i class="bi bi-key-fill"></i></div>
+          <div class="credentials-body">
+            <h5>{{ credentials.title }}</h5>
+            <div class="credentials-grid">
+              <div><span>Identifiant</span><strong>{{ credentials.login_id }}</strong></div>
+              <div><span>Mot de passe</span><strong>{{ credentials.password }}</strong></div>
+            </div>
+            {% if credentials.extra %}<p class="mb-0">{{ credentials.extra }}</p>{% endif %}
+          </div>
+          <button class="btn btn-outline-secondary btn-sm" type="button" data-credentials-close aria-label="Fermer">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+      {% endif %}
+
+      {% include 'web/includes/messages.html' %}
+
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'js/app.js' %}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

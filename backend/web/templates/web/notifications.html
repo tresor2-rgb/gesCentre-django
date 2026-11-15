@@ -1,0 +1,53 @@
+{% extends 'web/base.html' %}
+{% block title %}Notifications · AppCentre{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+{% block page_subtitle %}Vos messages et alertes récentes{% endblock %}
+
+{% block content %}
+<div class="app-card">
+  <div class="app-card-header">
+    <div>
+      <h2>Boîte de réception</h2>
+      <p class="subtitle">{{ unread_notifications }} notification{{ unread_notifications|pluralize }} non lue{{ unread_notifications|pluralize }}.</p>
+    </div>
+    {% if unread_notifications %}
+      <form method="post" action="{% url 'web:notifications_read_all' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-primary btn-sm"><i class="bi bi-check2-all"></i> Tout marquer comme lu</button>
+      </form>
+    {% endif %}
+  </div>
+
+  {% for notification in notifications %}
+    <div class="notification-item {% if not notification.is_read %}unread{% endif %}">
+      <span class="notification-icon">
+        <i class="bi {% if notification.notification_type == 'quiz_submission' %}bi-ui-checks{% else %}bi-info-circle{% endif %}"></i>
+      </span>
+      <div class="notification-body">
+        <h4>
+          {{ notification.title }}
+          {% if not notification.is_read %}<span class="badge-soft danger ms-1">Nouveau</span>{% endif %}
+        </h4>
+        <p>{{ notification.message|default:"" }}</p>
+        <small><i class="bi bi-clock"></i> {{ notification.created_at|date:"d/m/Y à H:i" }}</small>
+      </div>
+      <div class="d-flex flex-column gap-1">
+        {% if notification.link %}
+          <a href="{% url 'web:notification_read' notification.pk %}" class="btn btn-sm btn-outline-primary">
+            Ouvrir
+          </a>
+        {% endif %}
+        {% if not notification.is_read %}
+          <a href="{% url 'web:notification_read' notification.pk %}" class="btn btn-sm btn-light">Marquer lu</a>
+        {% endif %}
+      </div>
+    </div>
+  {% empty %}
+    <div class="empty-state">
+      <i class="bi bi-bell-slash"></i>
+      <h4>Aucune notification</h4>
+      <p>Vous serez informé ici des nouvelles activités.</p>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

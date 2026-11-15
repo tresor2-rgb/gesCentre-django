@@ -1,0 +1,110 @@
+{% extends 'web/base.html' %}
+{% block title %}Élèves · AppCentre{% endblock %}
+{% block page_title %}Élèves{% endblock %}
+{% block page_subtitle %}{{ students|length }} élève{{ students|length|pluralize }} affiché{{ students|length|pluralize }}{% endblock %}
+
+{% block content %}
+<div class="stat-grid">
+  <div class="stat-card"><span class="stat-icon green"><i class="bi bi-check2-circle"></i></span><div><div class="stat-value">{{ approved_count }}</div><div class="stat-label">Approuvés</div></div></div>
+  <div class="stat-card"><span class="stat-icon orange"><i class="bi bi-hourglass-split"></i></span><div><div class="stat-value">{{ pending_count }}</div><div class="stat-label">En attente</div></div></div>
+  <div class="stat-card"><span class="stat-icon red"><i class="bi bi-pause-circle"></i></span><div><div class="stat-value">{{ suspended_count }}</div><div class="stat-label">Suspendus</div></div></div>
+  <div class="stat-card"><span class="stat-icon"><i class="bi bi-x-circle"></i></span><div><div class="stat-value">{{ rejected_count }}</div><div class="stat-label">Rejetés</div></div></div>
+</div>
+
+<div class="app-card">
+  <div class="app-card-header">
+    <form method="get" class="d-flex gap-2 flex-wrap align-items-center">
+      <input type="search" name="q" value="{{ search }}" class="form-control form-control-sm" placeholder="Nom, téléphone, email…" style="min-width: 220px;">
+      <select name="status" class="form-select form-select-sm" style="width:auto;">
+        <option value="">Tous les statuts</option>
+        {% for value, label in status_choices %}
+          <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <select name="classe" class="form-select form-select-sm" style="width:auto;">
+        <option value="">Toutes les classes</option>
+        {% for classe in classes %}
+          <option value="{{ classe.pk }}" {% if classe_id == classe.pk|stringformat:"s" %}selected{% endif %}>{{ classe.name }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn btn-sm btn-outline-primary"><i class="bi bi-funnel"></i> Filtrer</button>
+      <a href="{% url 'web:manager_students' %}" class="btn btn-sm btn-light">Réinitialiser</a>
+    </form>
+    <a href="{% url 'web:manager_student_create' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Inscrire un élève</a>
+  </div>
+
+  {% if students %}
+    <div class="table-responsive">
+      <table class="table table-app">
+        <thead>
+          <tr><th>Élève</th><th>Classe</th><th>Contact</th><th>Statut</th><th class="text-end">Actions</th></tr>
+        </thead>
+        <tbody>
+          {% for student in students %}
+            <tr>
+              <td>
+                <div class="user-cell">
+                  <span class="avatar avatar-sm">{{ student.first_name|slice:":1" }}{{ student.last_name|slice:":1" }}</span>
+                  <div>
+                    <strong>{{ student.first_name }} {{ student.last_name }}</strong>
+                    <small>{{ student.user.email|default:"Compte non relié" }}</small>
+                  </div>
+                </div>
+              </td>
+              <td>
+                {% firstof student.classe.name student.class_group.name "—" %}
+                {% if student.registration_type == 'self_request' %}<br><small class="text-muted">Demande spontanée</small>{% endif %}
+              </td>
+              <td>
+                {{ student.phone|default:"—" }}
+                {% if student.parent_phone %}<br><small class="text-muted">Parent : {{ student.parent_phone }}</small>{% endif %}
+              </td>
+              <td>
+                {% if student.status == 'approved' %}<span class="badge-soft success">Approuvé</span>
+                {% elif student.status == 'pending' %}<span class="badge-soft warning">En attente</span>
+                {% elif student.status == 'suspended' %}<span class="badge-soft danger">Suspendu</span>
+                {% else %}<span class="badge-soft">Rejeté</span>{% endif %}
+              </td>
+              <td>
+                <div class="table-actions">
+                  {% if student.status != 'approved' %}
+                    <form method="post" action="{% url 'web:manager_student_status' student.pk 'approve' %}">
+                      {% csrf_token %}
+                      <button class="btn btn-sm btn-success" title="Approuver"><i class="bi bi-check-lg"></i></button>
+                    </form>
+                  {% endif %}
+                  {% if student.status == 'approved' %}
+                    <form method="post" action="{% url 'web:manager_student_status' student.pk 'suspend' %}" data-confirm="Suspendre cet élève ?">
+                      {% csrf_token %}
+                      <button class="btn btn-sm btn-outline-warning" title="Suspendre"><i class="bi bi-pause"></i></button>
+                    </form>
+                  {% endif %}
+                  {% if student.status != 'rejected' %}
+                    <form method="post" action="{% url 'web:manager_student_status' student.pk 'reject' %}" data-confirm="Rejeter cet élève ?">
+                      {% csrf_token %}
+                      <button class="btn btn-sm btn-outline-danger" title="Rejeter"><i class="bi bi-x-lg"></i></button>
+                    </form>
+                  {% endif %}
+                  <form method="post" action="{% url 'web:manager_student_reset_password' student.pk %}" data-confirm="Réinitialiser le mot de passe de cet élève ?">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-outline-secondary" title="Réinitialiser le mot de passe"><i class="bi bi-key"></i></button>
+                  </form>
+                  <a href="{% url 'web:manager_student_edit' student.pk %}" class="btn btn-sm btn-outline-primary" title="Modifier"><i class="bi bi-pencil"></i></a>
+                  <a href="{% url 'web:manager_student_delete' student.pk %}" class="btn btn-sm btn-outline-danger" title="Supprimer"><i class="bi bi-trash"></i></a>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <i class="bi bi-people"></i>
+      <h4>Aucun élève trouvé</h4>
+      <p>Inscrivez un élève ou ajustez vos filtres.</p>
+      <a href="{% url 'web:manager_student_create' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Inscrire un élève</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

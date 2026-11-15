@@ -1,0 +1,65 @@
+{% extends 'web/base.html' %}
+{% block title %}Demandes d'inscription · AppCentre{% endblock %}
+{% block page_title %}Demandes d'inscription{% endblock %}
+{% block page_subtitle %}Validation des élèves souhaitant rejoindre le centre{% endblock %}
+
+{% block content %}
+<div class="app-card">
+  <div class="app-card-header">
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="{% url 'web:manager_requests' %}?status=pending" class="btn btn-sm {% if status == 'pending' %}btn-primary{% else %}btn-light{% endif %}">
+        En attente {% if pending_count %}<span class="badge-soft warning ms-1">{{ pending_count }}</span>{% endif %}
+      </a>
+      <a href="{% url 'web:manager_requests' %}?status=approved" class="btn btn-sm {% if status == 'approved' %}btn-primary{% else %}btn-light{% endif %}">Approuvées</a>
+      <a href="{% url 'web:manager_requests' %}?status=suspended" class="btn btn-sm {% if status == 'suspended' %}btn-primary{% else %}btn-light{% endif %}">Suspendues</a>
+      <a href="{% url 'web:manager_requests' %}?status=rejected" class="btn btn-sm {% if status == 'rejected' %}btn-primary{% else %}btn-light{% endif %}">Rejetées</a>
+      <a href="{% url 'web:manager_requests' %}?status=" class="btn btn-sm {% if not status %}btn-primary{% else %}btn-light{% endif %}">Toutes</a>
+    </div>
+  </div>
+
+  {% if requests %}
+    <div class="table-responsive">
+      <table class="table table-app">
+        <thead><tr><th>Élève</th><th>Message</th><th>Date</th><th>Statut</th><th class="text-end">Actions</th></tr></thead>
+        <tbody>
+          {% for item in requests %}
+            <tr>
+              <td>
+                <div class="user-cell">
+                  <span class="avatar avatar-sm">{{ item.student.first_name|slice:":1" }}{{ item.student.last_name|slice:":1" }}</span>
+                  <div>
+                    <strong>{{ item.student.first_name }} {{ item.student.last_name }}</strong>
+                    <small>{% firstof item.student.user.email item.student.phone "—" %}</small>
+                  </div>
+                </div>
+              </td>
+              <td class="text-muted-sm">{{ item.message|default:"—"|truncatechars:90 }}</td>
+              <td>{{ item.created_at|date:"d/m/Y H:i" }}</td>
+              <td>
+                {% if item.status == 'pending' %}<span class="badge-soft warning">En attente</span>
+                {% elif item.status == 'approved' %}<span class="badge-soft success">Approuvée</span>
+                {% elif item.status == 'suspended' %}<span class="badge-soft danger">Suspendue</span>
+                {% else %}<span class="badge-soft">Rejetée</span>{% endif %}
+              </td>
+              <td>
+                <div class="table-actions">
+                  <a href="{% url 'web:manager_request_process' item.pk 'approve' %}" class="btn btn-sm btn-success" title="Approuver"><i class="bi bi-check-lg"></i></a>
+                  <a href="{% url 'web:manager_request_process' item.pk 'suspend' %}" class="btn btn-sm btn-outline-warning" title="Suspendre"><i class="bi bi-pause"></i></a>
+                  <a href="{% url 'web:manager_request_process' item.pk 'reject' %}" class="btn btn-sm btn-outline-danger" title="Rejeter"><i class="bi bi-x-lg"></i></a>
+                  <a href="{% url 'web:manager_student_edit' item.student.pk %}" class="btn btn-sm btn-outline-primary" title="Fiche élève"><i class="bi bi-person"></i></a>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <i class="bi bi-inbox"></i>
+      <h4>Aucune demande</h4>
+      <p>Les demandes d'inscription des élèves apparaîtront ici.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

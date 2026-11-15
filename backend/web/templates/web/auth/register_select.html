@@ -1,0 +1,29 @@
+{% extends 'web/base_auth.html' %}
+{% block title %}Créer un compte · AppCentre{% endblock %}
+{% block card_class %}wide{% endblock %}
+{% block content %}
+  <h2>Créer un compte</h2>
+  <p class="auth-sub">Choisissez le type de compte qui correspond à votre situation.</p>
+
+  <div class="role-grid">
+    <a class="role-card" href="{% url 'web:register' 'manager' %}">
+      <i class="bi bi-building-gear"></i>
+      <strong>Responsable de centre</strong>
+      <small>Créez un centre et pilotez les enseignants, élèves et classes.</small>
+    </a>
+    <a class="role-card" href="{% url 'web:register' 'teacher' %}">
+      <i class="bi bi-person-video3"></i>
+      <strong>Enseignant</strong>
+      <small>Rejoignez un centre existant. Votre compte sera validé par le responsable.</small>
+    </a>
+    <a class="role-card" href="{% url 'web:register' 'student' %}">
+      <i class="bi bi-mortarboard"></i>
+      <strong>Élève</strong>
+      <small>Demandez votre inscription dans un centre et suivez vos cours.</small>
+    </a>
+  </div>
+
+  <div class="auth-links mt-4">
+    <a href="{% url 'web:login' %}"><i class="bi bi-arrow-left"></i> Retour à la connexion</a>
+  </div>
+{% endblock %}

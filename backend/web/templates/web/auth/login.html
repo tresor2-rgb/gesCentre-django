@@ -1,0 +1,19 @@
+{% extends 'web/base_auth.html' %}
+{% block title %}Connexion · AppCentre{% endblock %}
+{% block content %}
+  <h2>Connexion</h2>
+  <p class="auth-sub">Accédez à votre espace de gestion ou d'apprentissage.</p>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include 'web/includes/form_fields.html' %}
+    <button type="submit" class="btn btn-primary w-100 py-2 mt-2">
+      <i class="bi bi-box-arrow-in-right"></i> Se connecter
+    </button>
+  </form>
+
+  <div class="auth-links">
+    <a href="{% url 'web:forgot_password' %}">Mot de passe oublié ?</a>
+    <a href="{% url 'web:register_select' %}">Créer un compte</a>
+  </div>
+{% endblock %}

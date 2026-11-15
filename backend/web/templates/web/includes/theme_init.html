@@ -1,0 +1,17 @@
+<script>
+  (function () {
+    try {
+      var mode = localStorage.getItem('appcentre-theme') || 'light';
+      if (['light', 'dark', 'system'].indexOf(mode) === -1) mode = 'light';
+      var dark = mode === 'dark' || (mode === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      var root = document.documentElement;
+      root.setAttribute('data-theme-mode', mode);
+      root.setAttribute('data-theme', dark ? 'dark' : 'light');
+      root.setAttribute('data-bs-theme', dark ? 'dark' : 'light');
+      root.style.colorScheme = dark ? 'dark' : 'light';
+    } catch (error) {
+      document.documentElement.setAttribute('data-theme', 'light');
+      document.documentElement.setAttribute('data-bs-theme', 'light');
+    }
+  })();
+</script>

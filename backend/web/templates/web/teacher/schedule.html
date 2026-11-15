@@ -1,0 +1,39 @@
+{% extends 'web/base.html' %}
+{% block title %}Emploi du temps · AppCentre{% endblock %}
+{% block page_title %}Mon emploi du temps{% endblock %}
+{% block page_subtitle %}{{ total }} créneau{{ total|pluralize }}{% endblock %}
+
+{% block content %}
+<div class="page-actions mb-3">
+  <a href="{% url 'web:teacher_schedule_create' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Ajouter un créneau</a>
+</div>
+
+<div class="schedule-week">
+  {% for label, sessions in week %}
+    <div class="day-column {% if forloop.counter0 == today_weekday %}today{% endif %}">
+      <div class="day-column-header">
+        <span>{{ label }}</span>
+        <span class="badge-soft primary">{{ sessions|length }}</span>
+      </div>
+      <div class="day-column-body">
+        {% for item in sessions %}
+          <div class="session-card" style="border-left-color: {{ item.color|default:'#4f46e5' }};">
+            <div class="session-time">{{ item.start_time|time:"H:i" }} – {{ item.end_time|time:"H:i" }}</div>
+            <div class="session-title">{{ item.class_group.name|default:item.title }}</div>
+            <div class="session-meta">
+              <i class="bi bi-book"></i> {{ item.class_group.subject.name|default:"—" }}<br>
+              <i class="bi bi-geo-alt"></i> {{ item.classroom.name|default:"Salle non définie" }}
+            </div>
+            <div class="session-actions">
+              <a href="{% url 'web:teacher_schedule_edit' item.pk %}" class="btn btn-light">Modifier</a>
+              <a href="{% url 'web:teacher_schedule_delete' item.pk %}" class="btn btn-outline-danger">Suppr.</a>
+            </div>
+          </div>
+        {% empty %}
+          <p class="text-muted-sm text-center my-3">Libre</p>
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

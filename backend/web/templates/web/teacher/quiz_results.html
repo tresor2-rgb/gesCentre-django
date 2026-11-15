@@ -1,0 +1,49 @@
+{% extends 'web/base.html' %}
+{% block title %}Résultats · {{ quiz.title }}{% endblock %}
+{% block page_title %}Résultats du quiz{% endblock %}
+{% block page_subtitle %}{{ quiz.title }} · {{ results|length }} soumission{{ results|length|pluralize }}{% endblock %}
+
+{% block content %}
+<div class="page-actions mb-3">
+  <a href="{% url 'web:teacher_quiz_detail' quiz.pk %}" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i> Retour au quiz</a>
+</div>
+
+<div class="app-card">
+  {% if results %}
+    <div class="table-responsive">
+      <table class="table table-app">
+        <thead><tr><th>Élève</th><th>Classe</th><th>Score</th><th>Pourcentage</th><th>Reçu le</th></tr></thead>
+        <tbody>
+          {% for result in results %}
+            <tr>
+              <td>
+                <div class="user-cell">
+                  <span class="avatar avatar-xs">{{ result.student.first_name|slice:":1" }}{{ result.student.last_name|slice:":1" }}</span>
+                  <div><strong>{{ result.student.first_name }} {{ result.student.last_name }}</strong><small>{{ result.student.user.email|default:"—" }}</small></div>
+                </div>
+              </td>
+              <td>{% firstof result.student.classe.name result.student.class_group.name "—" %}</td>
+              <td><strong>{{ result.score }}</strong> / {{ result.total_points }}</td>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <div class="progress flex-grow-1" style="height:7px;max-width:120px;">
+                    <div class="progress-bar {% if result.percentage >= 50 %}bg-success{% else %}bg-danger{% endif %}" style="width: {{ result.percentage }}%;"></div>
+                  </div>
+                  <span class="badge-soft {% if result.percentage >= 50 %}success{% else %}danger{% endif %}">{{ result.percentage }} %</span>
+                </div>
+              </td>
+              <td>{{ result.completed_at|date:"d/m/Y H:i" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <i class="bi bi-bar-chart"></i>
+      <h4>Aucune soumission</h4>
+      <p>Les résultats apparaîtront ici dès que vos élèves auront passé le quiz.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

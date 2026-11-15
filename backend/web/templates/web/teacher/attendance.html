@@ -1,0 +1,102 @@
+{% extends 'web/base.html' %}
+{% load web_extras %}
+{% block title %}Présences · AppCentre{% endblock %}
+{% block page_title %}Feuille de présence{% endblock %}
+{% block page_subtitle %}Mes classes{% endblock %}
+
+{% block content %}
+<div class="app-card mb-4">
+  <div class="app-card-body">
+    <form method="get" class="row g-3 align-items-end">
+      <div class="col-md-5">
+        <label class="form-label" for="group">Groupe de classe</label>
+        <select name="group" id="group" class="form-select">
+          {% for item in groups %}
+            <option value="{{ item.pk }}" {% if group and item.pk == group.pk %}selected{% endif %}>{{ item.name }} — {{ item.subject.name }}</option>
+          {% empty %}
+            <option value="">Aucune classe disponible</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label" for="date">Date</label>
+        <input type="date" name="date" id="date" class="form-control" value="{{ selected_date|date:'Y-m-d' }}">
+      </div>
+      <div class="col-md-3">
+        <button class="btn btn-primary w-100"><i class="bi bi-search"></i> Charger</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if group %}
+  <div class="app-card">
+    <div class="app-card-header">
+      <div>
+        <h2>{{ group.name }} — {{ group.subject.name }}</h2>
+        <p class="subtitle">{{ selected_date|date:"l d F Y" }} · {{ students|length }} élève{{ students|length|pluralize }}</p>
+      </div>
+      <div class="attendance-bulk">
+        <button type="button" class="btn btn-sm btn-outline-success" data-attendance-status="present"><i class="bi bi-check-all"></i> Tous présents</button>
+        <button type="button" class="btn btn-sm btn-outline-danger" data-attendance-status="absent"><i class="bi bi-x-circle"></i> Tous absents</button>
+      </div>
+    </div>
+
+    {% if students %}
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="group" value="{{ group.pk }}">
+        <input type="hidden" name="date" value="{{ selected_date|date:'Y-m-d' }}">
+        <div class="table-responsive">
+          <table class="table table-app attendance-table">
+            <thead><tr><th>Élève</th><th>Statut</th><th>Remarque</th></tr></thead>
+            <tbody>
+              {% for student in students %}
+                <tr>
+                  <td>
+                    <input type="hidden" name="student_ids" value="{{ student.pk }}">
+                    <div class="user-cell">
+                      <span class="avatar avatar-xs">{{ student.first_name|slice:":1" }}{{ student.last_name|slice:":1" }}</span>
+                      <div><strong>{{ student.first_name }} {{ student.last_name }}</strong><small>{{ student.classe.name|default:"" }}</small></div>
+                    </div>
+                  </td>
+                  <td>
+                    <select name="status_{{ student.pk }}" class="form-select form-select-sm" data-attendance-select>
+                      {% with record=existing|get_item:student.pk %}
+                        {% for value, label in status_choices %}
+                          <option value="{{ value }}" {% if record and record.status == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                      {% endwith %}
+                    </select>
+                  </td>
+                  <td>
+                    {% with record=existing|get_item:student.pk %}
+                      <input type="text" name="remarks_{{ student.pk }}" class="form-control form-control-sm" placeholder="Optionnel" value="{{ record.remarks|default:'' }}">
+                    {% endwith %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="app-card-footer d-flex justify-content-end">
+          <button class="btn btn-primary"><i class="bi bi-save"></i> Enregistrer les présences</button>
+        </div>
+      </form>
+    {% else %}
+      <div class="empty-state">
+        <i class="bi bi-people"></i>
+        <h4>Aucun élève approuvé dans ce groupe</h4>
+      </div>
+    {% endif %}
+  </div>
+{% else %}
+  <div class="app-card">
+    <div class="empty-state">
+      <i class="bi bi-collection"></i>
+      <h4>Aucune classe</h4>
+      <p>Contactez le responsable du centre pour obtenir une attribution de classe.</p>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,115 @@
+{% extends 'web/base.html' %}
+{% block title %}Ajouter une question · {{ quiz.title }}{% endblock %}
+{% block page_title %}Ajouter une question{% endblock %}
+{% block page_subtitle %}{{ quiz.title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-9">
+    <div class="app-card">
+      <div class="app-card-body">
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger">
+            {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+          </div>
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data" id="question-form" novalidate>
+          {% csrf_token %}
+
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.question_text.id_for_label }}">Énoncé de la question <span class="text-danger">*</span></label>
+            {{ form.question_text }}
+            {% for error in form.question_text.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <label class="form-label" for="{{ form.question_type.id_for_label }}">Type de question</label>
+              {{ form.question_type }}
+              {% for error in form.question_type.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="{{ form.points.id_for_label }}">Points</label>
+              {{ form.points }}
+              {% for error in form.points.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="{{ form.order.id_for_label }}">Ordre</label>
+              {{ form.order }}
+              <div class="form-text">Laisser 0 pour ajouter à la fin.</div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.image.id_for_label }}">Image (optionnel)</label>
+            {{ form.image }}
+          </div>
+
+          <div class="form-check mb-3">
+            {{ form.enable_math_keyboard }}
+            <label class="form-check-label" for="{{ form.enable_math_keyboard.id_for_label }}">
+              Activer le clavier mathématique pour cette question
+            </label>
+          </div>
+
+          <div class="math-palette" id="math-palette" style="display:none;">
+            <button type="button" data-math="²">x²</button>
+            <button type="button" data-math="³">x³</button>
+            <button type="button" data-math="√">√</button>
+            <button type="button" data-math="π">π</button>
+            <button type="button" data-math="≤">≤</button>
+            <button type="button" data-math="≥">≥</button>
+            <button type="button" data-math="≠">≠</button>
+            <button type="button" data-math="×">×</button>
+            <button type="button" data-math="÷">÷</button>
+            <button type="button" data-math="±">±</button>
+            <button type="button" data-math="∞">∞</button>
+            <button type="button" data-math="∑">∑</button>
+            <button type="button" data-math="∫">∫</button>
+            <button type="button" data-math="θ">θ</button>
+            <button type="button" data-math="α">α</button>
+            <button type="button" data-math="β">β</button>
+            <button type="button" data-math="°">°</button>
+          </div>
+
+          <div id="qcm-section" class="mb-4">
+            <label class="form-label">Options du QCM</label>
+            <p class="text-muted-sm">Cochez la bonne réponse. Ajoutez autant d'options que nécessaire.</p>
+            <input type="hidden" name="option_count" id="option_count" value="0">
+            <div id="option-rows"></div>
+            <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="add-option">
+              <i class="bi bi-plus-lg"></i> Ajouter une option
+            </button>
+          </div>
+
+          <div id="true-false-section" class="mb-4">
+            <label class="form-label">Bonne réponse</label>
+            <div class="d-flex gap-4">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="correct_option" id="tf-vrai" value="0" checked>
+                <label class="form-check-label" for="tf-vrai">Vrai</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="correct_option" id="tf-faux" value="1">
+                <label class="form-check-label" for="tf-faux">Faux</label>
+              </div>
+            </div>
+          </div>
+
+          <div id="short-answer-section" class="mb-4">
+            <label class="form-label" for="answer_text">Réponse correcte attendue</label>
+            <input type="text" name="answer_text" id="answer_text" class="form-control" placeholder="Saisissez la réponse exacte">
+            <div class="form-text">La comparaison ignore les majuscules et les espaces en début/fin.</div>
+          </div>
+
+          <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check2"></i> Ajouter la question</button>
+            <a href="{% url 'web:teacher_quiz_detail' quiz.pk %}" class="btn btn-light">Annuler</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

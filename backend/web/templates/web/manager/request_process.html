@@ -1,0 +1,48 @@
+{% extends 'web/base.html' %}
+{% block title %}Traiter une demande · AppCentre{% endblock %}
+{% block page_title %}
+  {% if action == 'approve' %}Approuver la demande{% elif action == 'suspend' %}Suspendre la demande{% else %}Rejeter la demande{% endif %}
+{% endblock %}
+{% block page_subtitle %}{{ request_obj.student.first_name }} {{ request_obj.student.last_name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <div class="app-card">
+      <div class="app-card-body">
+        <div class="d-flex align-items-center gap-3 mb-4">
+          <span class="avatar avatar-lg">{{ request_obj.student.first_name|slice:":1" }}{{ request_obj.student.last_name|slice:":1" }}</span>
+          <div>
+            <h3 class="mb-1">{{ request_obj.student.first_name }} {{ request_obj.student.last_name }}</h3>
+            <p class="text-muted-sm mb-0">{% firstof request_obj.student.user.email request_obj.student.phone "Sans contact" %}</p>
+            <span class="badge-soft warning mt-1">{{ request_obj.get_status_display }}</span>
+          </div>
+        </div>
+
+        <div class="border rounded-3 p-3 mb-4 bg-light">
+          <span class="text-muted-sm d-block mb-1">Message de la demande</span>
+          <p class="mb-0">{{ request_obj.message|default:"Aucun message." }}</p>
+        </div>
+
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label" for="message">Message à enregistrer (optionnel)</label>
+            <textarea name="message" id="message" rows="3" class="form-control" placeholder="Ajoutez une note ou une réponse…">{{ request_obj.message }}</textarea>
+          </div>
+          <div class="d-flex gap-2">
+            {% if action == 'approve' %}
+              <button class="btn btn-success"><i class="bi bi-check-lg"></i> Approuver</button>
+            {% elif action == 'suspend' %}
+              <button class="btn btn-warning"><i class="bi bi-pause"></i> Suspendre</button>
+            {% else %}
+              <button class="btn btn-danger"><i class="bi bi-x-lg"></i> Rejeter</button>
+            {% endif %}
+            <a href="{% url 'web:manager_requests' %}" class="btn btn-light">Annuler</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

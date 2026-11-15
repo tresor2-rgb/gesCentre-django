@@ -1,0 +1,56 @@
+{% extends 'web/base.html' %}
+{% block title %}Inscription en attente · AppCentre{% endblock %}
+{% block page_title %}Inscription en attente{% endblock %}
+{% block page_subtitle %}Votre compte est en cours de validation{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="app-card mb-4">
+      <div class="app-card-body text-center py-5">
+        <span class="empty-icon"><i class="bi bi-hourglass-split"></i></span>
+        <h3 class="mt-3">Votre dossier est en cours d'examen</h3>
+        <p class="text-muted">
+          {% if center %}
+            Le centre <strong>{{ center.name }}</strong> doit approuver votre inscription.
+          {% else %}
+            Aucun centre n'est encore associé à votre compte.
+          {% endif %}
+          Vous recevrez une notification dès que votre statut sera mis à jour.
+        </p>
+        <div class="d-flex justify-content-center gap-2 mt-3">
+          <a href="{% url 'web:student_centers' %}" class="btn btn-primary"><i class="bi bi-search"></i> Parcourir les centres</a>
+          <a href="{% url 'web:notifications' %}" class="btn btn-light"><i class="bi bi-bell"></i> Mes notifications</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="app-card">
+      <div class="app-card-header"><h2>Mes demandes d'inscription</h2></div>
+      {% if requests %}
+        <div class="table-responsive">
+          <table class="table table-app">
+            <thead><tr><th>Centre</th><th>Envoyée le</th><th>Statut</th></tr></thead>
+            <tbody>
+              {% for item in requests %}
+                <tr>
+                  <td><strong>{{ item.center.name }}</strong></td>
+                  <td>{{ item.created_at|date:"d/m/Y H:i" }}</td>
+                  <td>
+                    {% if item.status == 'pending' %}<span class="badge-soft warning">En attente</span>
+                    {% elif item.status == 'approved' %}<span class="badge-soft success">Approuvée</span>
+                    {% elif item.status == 'rejected' %}<span class="badge-soft danger">Refusée</span>
+                    {% else %}<span class="badge-soft">{{ item.get_status_display }}</span>{% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state py-4"><i class="bi bi-inbox"></i><h4>Aucune demande</h4></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

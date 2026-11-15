@@ -1,0 +1,145 @@
+{% extends 'web/base.html' %}
+{% block title %}{{ group.name }} · AppCentre{% endblock %}
+{% block page_title %}{{ group.name }}{% endblock %}
+{% block page_subtitle %}{{ group.classe.name|default:"Sans classe" }} · {{ group.subject.name }}{% endblock %}
+
+{% block content %}
+<div class="page-actions mb-3">
+  <a href="{% url 'web:manager_group_edit' group.pk %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-pencil"></i> Modifier</a>
+  <a href="{% url 'web:manager_groups' %}" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i> Retour</a>
+</div>
+
+<div class="row g-4">
+  <div class="col-xl-8">
+    <div class="app-card">
+      <div class="app-card-header">
+        <div><h2>Élèves du groupe</h2><p class="subtitle">{{ students|length }} élève{{ students|length|pluralize }}.</p></div>
+      </div>
+      <div class="app-card-body border-bottom">
+        <form method="post" action="{% url 'web:manager_group_add_student' group.pk %}" class="d-flex gap-2 flex-wrap align-items-end">
+          {% csrf_token %}
+          <div class="flex-grow-1">
+            <label class="form-label" for="student_id">Ajouter un élève approuvé</label>
+            <select name="student_id" id="student_id" class="form-select">
+              {% for student in available_students %}
+                <option value="{{ student.pk }}">{{ student.first_name }} {{ student.last_name }}{% if student.classe %} — {{ student.classe.name }}{% endif %}</option>
+              {% empty %}
+                <option value="">Aucun élève disponible</option>
+              {% endfor %}
+            </select>
+          </div>
+          <button class="btn btn-primary" {% if not available_students %}disabled{% endif %}><i class="bi bi-person-plus"></i> Ajouter</button>
+        </form>
+      </div>
+      {% if students %}
+        <div class="table-responsive">
+          <table class="table table-app">
+            <thead><tr><th>Élève</th><th>Classe</th><th>Contact</th><th class="text-end">Action</th></tr></thead>
+            <tbody>
+              {% for student in students %}
+                <tr>
+                  <td>
+                    <div class="user-cell">
+                      <span class="avatar avatar-xs">{{ student.first_name|slice:":1" }}{{ student.last_name|slice:":1" }}</span>
+                      <div><strong>{{ student.first_name }} {{ student.last_name }}</strong><small>{{ student.user.email|default:"—" }}</small></div>
+                    </div>
+                  </td>
+                  <td>{% firstof student.classe.name student.class_group.name "—" %}</td>
+                  <td>{{ student.phone|default:student.parent_phone|default:"—" }}</td>
+                  <td class="text-end">
+                    <form method="post" action="{% url 'web:manager_group_remove_student' group.pk student.pk %}" data-confirm="Retirer cet élève du groupe ?">
+                      {% csrf_token %}
+                      <button class="btn btn-sm btn-outline-danger"><i class="bi bi-person-dash"></i> Retirer</button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <i class="bi bi-people"></i>
+          <h4>Aucun élève dans ce groupe</h4>
+          <p>Ajoutez des élèves approuvés ci-dessus.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="app-card">
+      <div class="app-card-header">
+        <div><h2>Emploi du temps du groupe</h2></div>
+        <a href="{% url 'web:manager_schedule_create' %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-plus-lg"></i> Créneau</a>
+      </div>
+      {% if schedules %}
+        <div class="table-responsive">
+          <table class="table table-app">
+            <thead><tr><th>Jour</th><th>Horaire</th><th>Salle</th><th>Statut</th><th class="text-end">Actions</th></tr></thead>
+            <tbody>
+              {% for item in schedules %}
+                <tr>
+                  <td>{{ item.get_day_of_week_display }}</td>
+                  <td>{{ item.start_time|time:"H:i" }} – {{ item.end_time|time:"H:i" }}</td>
+                  <td>{{ item.classroom.name|default:"—" }}</td>
+                  <td><span class="badge-soft {% if item.status == 'active' %}success{% else %}warning{% endif %}">{{ item.get_status_display }}</span></td>
+                  <td class="text-end">
+                    <a href="{% url 'web:manager_schedule_edit' item.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state py-4"><i class="bi bi-calendar-x"></i><h4>Aucun créneau</h4></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-xl-4">
+    <div class="app-card">
+      <div class="app-card-header"><h2>Informations</h2></div>
+      <div class="app-card-body">
+        <div class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted-sm">Classe</span><strong>{{ group.classe.name|default:"—" }}</strong></div>
+        <div class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted-sm">Matière</span><strong>{{ group.subject.name }}</strong></div>
+        <div class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted-sm">Enseignant</span><strong>{{ group.teacher.user.get_full_name|default:"Non affecté" }}</strong></div>
+        <div class="d-flex justify-content-between py-2"><span class="text-muted-sm">Salle</span><strong>{{ group.classroom.name|default:"—" }}</strong></div>
+      </div>
+    </div>
+
+    <div class="app-card">
+      <div class="app-card-header"><h2>Quiz</h2></div>
+      <div class="app-card-body p-0">
+        {% for quiz in quizzes %}
+          <div class="notification-item">
+            <span class="notification-icon"><i class="bi bi-ui-checks"></i></span>
+            <div class="notification-body">
+              <h4>{{ quiz.title }}</h4>
+              <p class="mb-0">{{ quiz.questions_count }} question{{ quiz.questions_count|pluralize }} · {{ quiz.duration_minutes }} min</p>
+            </div>
+          </div>
+        {% empty %}
+          <div class="empty-state py-4"><i class="bi bi-ui-checks"></i><h4>Aucun quiz</h4></div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="app-card">
+      <div class="app-card-header"><h2>Supports de cours</h2></div>
+      <div class="app-card-body p-0">
+        {% for material in materials %}
+          <div class="notification-item">
+            <span class="notification-icon"><i class="bi bi-file-earmark-text"></i></span>
+            <div class="notification-body">
+              <h4>{{ material.title }}</h4>
+              <p class="mb-0">{{ material.subject.name }}{% if not material.is_published %} · <span class="text-warning">Non publié</span>{% endif %}</p>
+            </div>
+          </div>
+        {% empty %}
+          <div class="empty-state py-4"><i class="bi bi-folder2-open"></i><h4>Aucun support</h4></div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

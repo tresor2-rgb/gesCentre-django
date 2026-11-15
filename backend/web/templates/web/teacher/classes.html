@@ -1,0 +1,39 @@
+{% extends 'web/base.html' %}
+{% block title %}Mes classes · AppCentre{% endblock %}
+{% block page_title %}Mes classes{% endblock %}
+{% block page_subtitle %}{{ groups|length }} classe{{ groups|length|pluralize }} attribuée{{ groups|length|pluralize }}{% endblock %}
+
+{% block content %}
+{% if groups %}
+  <div class="row g-4">
+    {% for group in groups %}
+      <div class="col-md-6 col-xl-4">
+        <div class="app-card h-100">
+          <div class="app-card-body">
+            <div class="d-flex align-items-start justify-content-between mb-3">
+              <span class="stat-icon"><i class="bi bi-collection"></i></span>
+              <span class="badge-soft primary">{{ group.students_count }} élève{{ group.students_count|pluralize }}</span>
+            </div>
+            <h3 class="mb-1" style="font-size:1.05rem;">{{ group.name }}</h3>
+            <p class="text-muted-sm mb-3">{{ group.classe.name|default:"Sans classe" }} · {{ group.subject.name }}</p>
+            <div class="d-flex justify-content-between py-1 border-bottom"><span class="text-muted-sm">Salle</span><strong>{{ group.classroom.name|default:"—" }}</strong></div>
+            <div class="d-flex justify-content-between py-1"><span class="text-muted-sm">Quiz</span><strong>{{ group.quizzes.count }}</strong></div>
+          </div>
+          <div class="app-card-footer d-flex gap-2">
+            <a href="{% url 'web:teacher_class_detail' group.pk %}" class="btn btn-primary btn-sm flex-grow-1">Ouvrir</a>
+            <a href="{% url 'web:teacher_attendance' %}?group={{ group.pk }}" class="btn btn-outline-primary btn-sm" title="Présences"><i class="bi bi-clipboard-check"></i></a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="app-card">
+    <div class="empty-state">
+      <i class="bi bi-collection"></i>
+      <h4>Aucune classe attribuée</h4>
+      <p>Contactez le responsable de votre centre pour qu'il vous affecte des classes.</p>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

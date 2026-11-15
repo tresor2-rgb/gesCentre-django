@@ -1,0 +1,36 @@
+{% extends 'web/base.html' %}
+{% block title %}Mes classes · AppCentre{% endblock %}
+{% block page_title %}Mes classes{% endblock %}
+{% block page_subtitle %}{{ classe.name|default:"Aucune classe principale" }} · {{ groups|length }} groupe{{ groups|length|pluralize }}{% endblock %}
+
+{% block content %}
+{% if groups %}
+  <div class="row g-4">
+    {% for group in groups %}
+      <div class="col-md-6 col-xl-4">
+        <div class="app-card h-100">
+          <div class="app-card-body">
+            <div class="d-flex align-items-start justify-content-between mb-3">
+              <span class="stat-icon"><i class="bi bi-collection"></i></span>
+              <span class="badge-soft primary">{{ group.students_count }} élève{{ group.students_count|pluralize }}</span>
+            </div>
+            <h3 class="mb-1" style="font-size:1.05rem;">{{ group.name }}</h3>
+            <p class="text-muted-sm mb-3">{{ group.classe.name|default:"Sans classe" }} · {{ group.subject.name }}</p>
+            <div class="d-flex justify-content-between py-1 border-bottom"><span class="text-muted-sm">Enseignant</span><strong>{% firstof group.teacher.user.get_full_name group.teacher.user.username "—" %}</strong></div>
+            <div class="d-flex justify-content-between py-1"><span class="text-muted-sm">Salle</span><strong>{{ group.classroom.name|default:"—" }}</strong></div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="app-card">
+    <div class="empty-state">
+      <i class="bi bi-collection"></i>
+      <h4>Aucune classe pour le moment</h4>
+      <p>Votre inscription doit être approuvée et une classe doit vous être attribuée.</p>
+      <a href="{% url 'web:student_centers' %}" class="btn btn-primary btn-sm">Parcourir les centres</a>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

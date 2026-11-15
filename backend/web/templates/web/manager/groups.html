@@ -1,0 +1,46 @@
+{% extends 'web/base.html' %}
+{% block title %}Attributions · AppCentre{% endblock %}
+{% block page_title %}Attributions de classes{% endblock %}
+{% block page_subtitle %}Association matière · enseignant · salle{% endblock %}
+
+{% block content %}
+<div class="page-actions mb-3">
+  <a href="{% url 'web:manager_group_create' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Nouvelle attribution</a>
+</div>
+
+<div class="app-card">
+  <div class="app-card-header"><h2>{{ groups|length }} attribution{{ groups|length|pluralize }}</h2></div>
+  {% if groups %}
+    <div class="table-responsive">
+      <table class="table table-app">
+        <thead><tr><th>Classe</th><th>Matière</th><th>Enseignant</th><th>Salle</th><th>Élèves</th><th class="text-end">Actions</th></tr></thead>
+        <tbody>
+          {% for group in groups %}
+            <tr>
+              <td><a href="{% url 'web:manager_group_detail' group.pk %}" class="fw-semibold">{{ group.classe.name|default:group.name }}</a></td>
+              <td>{{ group.subject.name }}</td>
+              <td>{{ group.teacher.user.get_full_name|default:"Non affecté" }}</td>
+              <td>{{ group.classroom.name|default:"—" }}</td>
+              <td><span class="badge-soft success">{{ group.students_count }}</span></td>
+              <td>
+                <div class="table-actions">
+                  <a href="{% url 'web:manager_group_detail' group.pk %}" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a>
+                  <a href="{% url 'web:manager_group_edit' group.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                  <a href="{% url 'web:manager_group_delete' group.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <i class="bi bi-collection"></i>
+      <h4>Aucune attribution</h4>
+      <p>Commencez par créer des classes, matières et enseignants, puis associez-les.</p>
+      <a href="{% url 'web:manager_group_create' %}" class="btn btn-primary btn-sm">Créer une attribution</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends 'web/base.html' %}
+{% block title %}{{ quiz.title }} · AppCentre{% endblock %}
+{% block page_title %}{{ quiz.title }}{% endblock %}
+{% block page_subtitle %}{{ questions|length }} question{{ questions|length|pluralize }} · {{ quiz.duration_minutes }} min · {{ quiz.total_points }} points{% endblock %}
+
+{% block content %}
+<div class="page-actions mb-3">
+  <a href="{% url 'web:teacher_quiz_add_question' quiz.pk %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Ajouter une question</a>
+  <a href="{% url 'web:teacher_quiz_edit' quiz.pk %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-pencil"></i> Modifier</a>
+  <a href="{% url 'web:teacher_quiz_results' quiz.pk %}" class="btn btn-outline-success btn-sm"><i class="bi bi-bar-chart"></i> Résultats ({{ results_count }})</a>
+  <form method="post" action="{% url 'web:teacher_quiz_toggle' quiz.pk %}" class="d-inline">
+    {% csrf_token %}
+    <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-power"></i> {% if quiz.is_active %}Désactiver{% else %}Activer{% endif %}</button>
+  </form>
+  <a href="{% url 'web:teacher_quiz_delete' quiz.pk %}" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i> Supprimer</a>
+  <a href="{% url 'web:teacher_quizzes' %}" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i> Retour</a>
+</div>
+
+<div class="row g-4">
+  <div class="col-xl-8">
+    <div class="app-card">
+      <div class="app-card-header">
+        <div><h2>Questions</h2><p class="subtitle">Les bonnes réponses sont signalées en vert.</p></div>
+        <span class="badge-soft {% if quiz.is_active %}success{% else %}warning{% endif %}">{% if quiz.is_active %}Actif{% else %}Inactif{% endif %}</span>
+      </div>
+      {% if questions %}
+        <div class="app-card-body">
+          {% for question in questions %}
+            <div class="question-block">
+              <div class="d-flex align-items-start justify-content-between gap-3">
+                <div>
+                  <span class="q-number">{{ forloop.counter }}</span>
+                  <strong>{{ question.question_text|linebreaksbr }}</strong>
+                  <div class="q-points mt-1">
+                    {{ question.get_question_type_display }} · {{ question.points }} point{{ question.points|pluralize }}
+                    {% if question.enable_math_keyboard %} · clavier mathématique{% endif %}
+                  </div>
+                </div>
+                <form method="post" action="{% url 'web:teacher_question_delete' question.pk %}" data-confirm="Supprimer cette question ?">
+                  {% csrf_token %}
+                  <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                </form>
+              </div>
+              {% if question.image %}
+                <img src="{{ question.image.url }}" alt="Illustration" class="img-fluid rounded my-3" style="max-height:220px;">
+              {% endif %}
+              <div class="mt-3 d-grid gap-2">
+                {% for option in question.options.all %}
+                  <div class="quiz-option {% if option.is_correct %}border-success{% endif %}">
+                    <i class="bi {% if option.is_correct %}bi-check-circle-fill text-success{% else %}bi-circle{% endif %}"></i>
+                    <span>{{ option.option_text|default:"(image)" }}</span>
+                    {% if option.image %}<img src="{{ option.image.url }}" alt="Option" style="max-height:60px;" class="ms-auto rounded">{% endif %}
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <i class="bi bi-question-circle"></i>
+          <h4>Aucune question</h4>
+          <p>Ajoutez des questions pour rendre ce quiz utilisable par les élèves.</p>
+          <a href="{% url 'web:teacher_quiz_add_question' quiz.pk %}" class="btn btn-primary btn-sm">Ajouter une question</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-xl-4">
+    <div class="app-card">
+      <div class="app-card-header"><h2>Informations</h2></div>
+      <div class="app-card-body">
+        <div class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted-sm">Durée</span><strong>{{ quiz.duration_minutes }} minutes</strong></div>
+        <div class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted-sm">Points totaux</span><strong>{{ quiz.total_points }}</strong></div>
+        <div class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted-sm">Questions</span><strong>{{ questions|length }}</strong></div>
+        <div class="d-flex justify-content-between py-2"><span class="text-muted-sm">Soumissions</span><strong>{{ results_count }}</strong></div>
+        <div class="divider"></div>
+        <span class="text-muted-sm d-block mb-2">Classes ciblées</span>
+        <div class="pill-list">
+          {% for group in quiz.class_groups.all %}
+            <span class="badge-soft primary">{{ group.name }}</span>
+          {% empty %}
+            <span class="text-muted-sm">Aucune</span>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

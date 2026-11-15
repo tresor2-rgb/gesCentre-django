@@ -1,0 +1,85 @@
+{% extends 'web/base.html' %}
+{% block title %}Enseignants · AppCentre{% endblock %}
+{% block page_title %}Enseignants{% endblock %}
+{% block page_subtitle %}{{ teachers|length }} enseignant{{ teachers|length|pluralize }} affiché{{ teachers|length|pluralize }}{% endblock %}
+
+{% block content %}
+<div class="app-card">
+  <div class="app-card-header">
+    <div class="d-flex gap-2 flex-wrap align-items-center">
+      <a href="{% url 'web:manager_teachers' %}" class="btn btn-sm {% if not status %}btn-primary{% else %}btn-light{% endif %}">Tous</a>
+      <a href="{% url 'web:manager_teachers' %}?status=active" class="btn btn-sm {% if status == 'active' %}btn-primary{% else %}btn-light{% endif %}">Actifs</a>
+      <a href="{% url 'web:manager_teachers' %}?status=pending" class="btn btn-sm {% if status == 'pending' %}btn-primary{% else %}btn-light{% endif %}">
+        À valider {% if pending_count %}<span class="badge-soft warning ms-1">{{ pending_count }}</span>{% endif %}
+      </a>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <form method="get" class="d-flex gap-2">
+        <input type="search" name="q" value="{{ search }}" class="form-control form-control-sm" placeholder="Rechercher…" style="min-width: 220px;">
+        {% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
+        <button class="btn btn-sm btn-outline-primary"><i class="bi bi-search"></i></button>
+      </form>
+      <a href="{% url 'web:manager_teacher_create' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Ajouter</a>
+    </div>
+  </div>
+
+  {% if teachers %}
+    <div class="table-responsive">
+      <table class="table table-app">
+        <thead>
+          <tr><th>Enseignant</th><th>Spécialité</th><th>Classes</th><th>Statut</th><th class="text-end">Actions</th></tr>
+        </thead>
+        <tbody>
+          {% for teacher in teachers %}
+            <tr>
+              <td>
+                <div class="user-cell">
+                  <span class="avatar avatar-sm">{{ teacher.user.first_name|slice:":1" }}{{ teacher.user.last_name|slice:":1" }}</span>
+                  <div>
+                    <strong>{{ teacher.user.get_full_name|default:teacher.user.username }}</strong>
+                    <small>{{ teacher.user.email|default:teacher.user.username }}</small>
+                  </div>
+                </div>
+              </td>
+              <td>{{ teacher.speciality|default:"—" }}</td>
+              <td><span class="badge-soft primary">{{ teacher.classes_count }}</span></td>
+              <td>
+                {% if teacher.is_active %}<span class="badge-soft success">Actif</span>
+                {% else %}<span class="badge-soft warning">En attente</span>{% endif %}
+              </td>
+              <td>
+                <div class="table-actions">
+                  {% if not teacher.is_active %}
+                    <form method="post" action="{% url 'web:manager_teacher_status' teacher.pk 'approve' %}">
+                      {% csrf_token %}
+                      <button class="btn btn-sm btn-success" title="Approuver"><i class="bi bi-check-lg"></i></button>
+                    </form>
+                  {% else %}
+                    <form method="post" action="{% url 'web:manager_teacher_status' teacher.pk 'reject' %}" data-confirm="Désactiver cet enseignant ?">
+                      {% csrf_token %}
+                      <button class="btn btn-sm btn-outline-warning" title="Désactiver"><i class="bi bi-pause"></i></button>
+                    </form>
+                  {% endif %}
+                  <form method="post" action="{% url 'web:manager_teacher_reset_password' teacher.pk %}" data-confirm="Réinitialiser le mot de passe de cet enseignant ?">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-outline-secondary" title="Réinitialiser le mot de passe"><i class="bi bi-key"></i></button>
+                  </form>
+                  <a href="{% url 'web:manager_teacher_edit' teacher.pk %}" class="btn btn-sm btn-outline-primary" title="Modifier"><i class="bi bi-pencil"></i></a>
+                  <a href="{% url 'web:manager_teacher_delete' teacher.pk %}" class="btn btn-sm btn-outline-danger" title="Supprimer"><i class="bi bi-trash"></i></a>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <i class="bi bi-person-video3"></i>
+      <h4>Aucun enseignant trouvé</h4>
+      <p>Ajoutez un enseignant ou modifiez vos critères de recherche.</p>
+      <a href="{% url 'web:manager_teacher_create' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Ajouter un enseignant</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

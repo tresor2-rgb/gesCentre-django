@@ -1,0 +1,88 @@
+{% extends 'web/base.html' %}
+{% block title %}{{ quiz.title }} · AppCentre{% endblock %}
+{% block page_title %}{{ quiz.title }}{% endblock %}
+{% block page_subtitle %}{{ questions|length }} question{{ questions|length|pluralize }} · {{ quiz.total_points }} points{% endblock %}
+
+{% block content %}
+<div class="quiz-header">
+  <div class="quiz-meta">
+    <span><i class="bi bi-person"></i> {{ quiz.teacher.user.get_full_name|default:quiz.teacher.user.username }}</span>
+    <span><i class="bi bi-list-ol"></i> {{ questions|length }} question{{ questions|length|pluralize }}</span>
+    <span><i class="bi bi-star"></i> {{ quiz.total_points }} points</span>
+  </div>
+  <div class="quiz-timer" id="quiz-timer" data-seconds="{% widthratio quiz.duration_minutes 1 60 %}">
+    <i class="bi bi-clock"></i> <span>--:--</span>
+  </div>
+</div>
+
+<form method="post" id="quiz-form">
+  {% csrf_token %}
+  {% for question in questions %}
+    <div class="question-block" data-question-block>
+      <div class="d-flex align-items-start justify-content-between gap-3">
+        <div>
+          <span class="q-number">{{ forloop.counter }}</span>
+          <strong>{{ question.question_text|linebreaksbr }}</strong>
+          <div class="q-points mt-1">{{ question.get_question_type_display }} · {{ question.points }} point{{ question.points|pluralize }}</div>
+        </div>
+      </div>
+      {% if question.image %}
+        <img src="{{ question.image.url }}" alt="Illustration" class="img-fluid rounded my-3" style="max-height:240px;">
+      {% endif %}
+
+      {% if question.question_type == 'short_answer' %}
+        <div class="mt-3">
+          <input type="text" name="q_{{ question.pk }}_text" class="form-control" placeholder="Votre réponse…" autocomplete="off" data-math-input>
+          {% if question.enable_math_keyboard %}
+            <div class="math-palette mt-2" data-math-palette>
+              <button type="button" data-math="²">x²</button>
+              <button type="button" data-math="³">x³</button>
+              <button type="button" data-math="√">√</button>
+              <button type="button" data-math="π">π</button>
+              <button type="button" data-math="≤">≤</button>
+              <button type="button" data-math="≥">≥</button>
+              <button type="button" data-math="≠">≠</button>
+              <button type="button" data-math="×">×</button>
+              <button type="button" data-math="÷">÷</button>
+              <button type="button" data-math="±">±</button>
+              <button type="button" data-math="∞">∞</button>
+              <button type="button" data-math="∑">∑</button>
+              <button type="button" data-math="∫">∫</button>
+              <button type="button" data-math="θ">θ</button>
+              <button type="button" data-math="α">α</button>
+              <button type="button" data-math="β">β</button>
+              <button type="button" data-math="°">°</button>
+            </div>
+          {% endif %}
+        </div>
+      {% else %}
+        <div class="mt-3 d-grid gap-2">
+          {% for option in question.options.all %}
+            <label class="quiz-option quiz-option-select">
+              <input type="radio" class="form-check-input" name="q_{{ question.pk }}_option" value="{{ option.pk }}">
+              <span>{{ option.option_text|default:"" }}</span>
+              {% if option.image %}<img src="{{ option.image.url }}" alt="Option" style="max-height:60px;" class="ms-auto rounded">{% endif %}
+            </label>
+          {% empty %}
+            <p class="text-muted-sm">Aucune option pour cette question.</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+  {% endfor %}
+
+  <div class="app-card">
+    <div class="app-card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
+      <div class="text-muted-sm">
+        <i class="bi bi-info-circle"></i> Le quiz sera soumis automatiquement à la fin du temps imparti.
+      </div>
+      <div class="d-flex gap-2">
+        <a href="{% url 'web:student_quizzes' %}" class="btn btn-light">Annuler</a>
+        <button type="submit" class="btn btn-primary" data-confirm="Soumettre définitivement vos réponses ?">
+          <i class="bi bi-send"></i> Soumettre le quiz
+        </button>
+      </div>
+    </div>
+  </div>
+</form>
+{% endblock %}

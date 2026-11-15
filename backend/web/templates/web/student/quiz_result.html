@@ -1,0 +1,44 @@
+{% extends 'web/base.html' %}
+{% block title %}Résultat · {{ quiz.title }}{% endblock %}
+{% block page_title %}Résultat du quiz{% endblock %}
+{% block page_subtitle %}{{ quiz.title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="app-card mb-4">
+      <div class="app-card-body text-center py-5">
+        <div class="result-ring {% if result.percentage >= 50 %}success{% else %}danger{% endif %}">
+          <span>{{ result.percentage|floatformat:0 }}<small>%</small></span>
+        </div>
+        <h3 class="mt-4">{{ result.score }} / {{ result.total_points }} points</h3>
+        <p class="text-muted mb-2">{{ quiz.title }}</p>
+        <p class="text-muted-sm">
+          Soumis le {{ result.completed_at|date:"d/m/Y à H:i" }}
+          {% if result.is_read_by_teacher %} · consulté par l'enseignant{% else %} · en attente de consultation par l'enseignant{% endif %}
+        </p>
+        <div class="d-flex justify-content-center gap-2 mt-3">
+          <a href="{% url 'web:student_quizzes' %}" class="btn btn-light"><i class="bi bi-arrow-left"></i> Mes quiz</a>
+          <a href="{% url 'web:student_dashboard' %}" class="btn btn-primary"><i class="bi bi-house"></i> Tableau de bord</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="app-card">
+      <div class="app-card-header"><h2>Détail</h2></div>
+      <div class="app-card-body">
+        <div class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted-sm">Élève</span><strong>{{ student.first_name }} {{ student.last_name }}</strong></div>
+        <div class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted-sm">Enseignant</span><strong>{{ quiz.teacher.user.get_full_name|default:quiz.teacher.user.username }}</strong></div>
+        <div class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted-sm">Score</span><strong>{{ result.score }} / {{ result.total_points }}</strong></div>
+        <div class="d-flex justify-content-between py-2"><span class="text-muted-sm">Pourcentage</span><strong>{{ result.percentage }} %</strong></div>
+        {% if not result.is_read_by_teacher %}
+          <div class="alert alert-info app-alert mt-3 mb-0">
+            <i class="bi bi-info-circle-fill"></i>
+            <span>Vous pourrez repasser ce quiz dès que votre enseignant aura consulté ce résultat.</span>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

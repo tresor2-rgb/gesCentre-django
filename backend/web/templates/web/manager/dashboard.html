@@ -1,0 +1,178 @@
+{% extends 'web/base.html' %}
+{% block title %}Tableau de bord · {{ center.name }}{% endblock %}
+{% block page_title %}Bonjour, {{ request.user.first_name|default:request.user.username }}{% endblock %}
+{% block page_subtitle %}{{ center.name }} · {{ today|date:"l d F Y" }}{% endblock %}
+
+{% block content %}
+<div class="stat-grid">
+  <div class="stat-card">
+    <span class="stat-icon blue"><i class="bi bi-people"></i></span>
+    <div><div class="stat-value">{{ total_students }}</div><div class="stat-label">Élèves actifs</div></div>
+  </div>
+  <div class="stat-card">
+    <span class="stat-icon green"><i class="bi bi-person-video3"></i></span>
+    <div><div class="stat-value">{{ total_teachers }}</div><div class="stat-label">Enseignants actifs</div></div>
+  </div>
+  <div class="stat-card">
+    <span class="stat-icon orange"><i class="bi bi-diagram-3"></i></span>
+    <div><div class="stat-value">{{ total_classes }}</div><div class="stat-label">Classes</div></div>
+  </div>
+  <div class="stat-card">
+    <span class="stat-icon"><i class="bi bi-collection"></i></span>
+    <div><div class="stat-value">{{ total_groups }}</div><div class="stat-label">Attributions</div></div>
+  </div>
+  <div class="stat-card">
+    <span class="stat-icon red"><i class="bi bi-inbox"></i></span>
+    <div><div class="stat-value">{{ pending_requests }}</div><div class="stat-label">Demandes en attente</div></div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-xl-8">
+    <div class="app-card">
+      <div class="app-card-header">
+        <div>
+          <h2>Cours d'aujourd'hui</h2>
+          <p class="subtitle">{{ sessions_today|length }} séance{{ sessions_today|length|pluralize }} programmée{{ sessions_today|length|pluralize }}.</p>
+        </div>
+        <a href="{% url 'web:manager_schedule' %}" class="btn btn-outline-primary btn-sm">Emploi du temps</a>
+      </div>
+      {% if sessions_today %}
+        <div class="app-card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-app">
+              <thead><tr><th>Heure</th><th>Cours</th><th>Enseignant</th><th>Salle</th><th></th></tr></thead>
+              <tbody>
+                {% for session in sessions_today %}
+                  <tr>
+                    <td><strong>{{ session.start_time|time:"H:i" }}</strong><br><small class="text-muted">{{ session.end_time|time:"H:i" }}</small></td>
+                    <td>
+                      <strong>{{ session.class_group.name|default:session.title }}</strong><br>
+                      <small class="text-muted">{{ session.class_group.subject.name|default:"" }}</small>
+                    </td>
+                    <td>{{ session.teacher.user.get_full_name|default:"—" }}</td>
+                    <td>{{ session.classroom.name|default:"—" }}</td>
+                    <td class="text-end">
+                      <a href="{% url 'web:manager_schedule_edit' session.pk %}" class="btn btn-sm btn-light"><i class="bi bi-pencil"></i></a>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <i class="bi bi-calendar-x"></i>
+          <h4>Aucun cours aujourd'hui</h4>
+          <p>Consultez ou complétez l'emploi du temps du centre.</p>
+          <a href="{% url 'web:manager_schedule_create' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Ajouter un créneau</a>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="app-card">
+      <div class="app-card-header">
+        <div>
+          <h2>Derniers élèves inscrits</h2>
+          <p class="subtitle">{{ total_students_all }} élève{{ total_students_all|pluralize }} au total.</p>
+        </div>
+        <a href="{% url 'web:manager_students' %}" class="btn btn-outline-primary btn-sm">Tous les élèves</a>
+      </div>
+      {% if recent_students %}
+        <div class="app-card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-app">
+              <thead><tr><th>Élève</th><th>Classe</th><th>Statut</th><th>Inscrit le</th></tr></thead>
+              <tbody>
+                {% for student in recent_students %}
+                  <tr>
+                    <td>
+                      <div class="user-cell">
+                        <span class="avatar avatar-xs">{{ student.first_name|slice:":1" }}{{ student.last_name|slice:":1" }}</span>
+                        <div><strong>{{ student.first_name }} {{ student.last_name }}</strong><small>{{ student.phone|default:"Sans téléphone" }}</small></div>
+                      </div>
+                    </td>
+                    <td>{% firstof student.classe.name student.class_group.name "—" %}</td>
+                    <td>
+                      {% if student.status == 'approved' %}<span class="badge-soft success">Approuvé</span>
+                      {% elif student.status == 'pending' %}<span class="badge-soft warning">En attente</span>
+                      {% elif student.status == 'suspended' %}<span class="badge-soft danger">Suspendu</span>
+                      {% else %}<span class="badge-soft">Rejeté</span>{% endif %}
+                    </td>
+                    <td>{{ student.created_at|date:"d/m/Y" }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <i class="bi bi-person-plus"></i>
+          <h4>Aucun élève pour le moment</h4>
+          <p>Inscrivez votre premier élève pour démarrer.</p>
+          <a href="{% url 'web:manager_student_create' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Inscrire un élève</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-xl-4">
+    <div class="app-card">
+      <div class="app-card-header"><h2>Actions rapides</h2></div>
+      <div class="app-card-body d-grid gap-2">
+        <a href="{% url 'web:manager_teacher_create' %}" class="btn btn-outline-primary text-start"><i class="bi bi-person-plus"></i> Ajouter un enseignant</a>
+        <a href="{% url 'web:manager_student_create' %}" class="btn btn-outline-primary text-start"><i class="bi bi-person-plus"></i> Inscrire un élève</a>
+        <a href="{% url 'web:manager_group_create' %}" class="btn btn-outline-primary text-start"><i class="bi bi-collection"></i> Créer une attribution</a>
+        <a href="{% url 'web:manager_attendance' %}" class="btn btn-outline-primary text-start"><i class="bi bi-clipboard-check"></i> Saisir les présences</a>
+      </div>
+    </div>
+
+    <div class="app-card">
+      <div class="app-card-header">
+        <div>
+          <h2>À traiter</h2>
+          <p class="subtitle">Demandes et validations</p>
+        </div>
+      </div>
+      <div class="app-card-body">
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+          <span><i class="bi bi-inbox text-warning"></i> Demandes d'inscription</span>
+          <a href="{% url 'web:manager_requests' %}" class="badge-soft warning">{{ pending_requests }}</a>
+        </div>
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+          <span><i class="bi bi-person-video3 text-warning"></i> Enseignants à valider</span>
+          <a href="{% url 'web:manager_teachers' %}?status=pending" class="badge-soft warning">{{ pending_teachers }}</a>
+        </div>
+        <div class="d-flex justify-content-between align-items-center py-2">
+          <span><i class="bi bi-bar-chart text-success"></i> Taux de présence (30 j)</span>
+          <span class="badge-soft success">{{ attendance_rate }} %</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="app-card">
+      <div class="app-card-header"><h2>Dernières demandes</h2></div>
+      <div class="app-card-body p-0">
+        {% for req in recent_requests %}
+          <div class="notification-item">
+            <span class="notification-icon"><i class="bi bi-person-plus"></i></span>
+            <div class="notification-body">
+              <h4>{{ req.student.first_name }} {{ req.student.last_name }}</h4>
+              <p class="mb-1">{{ req.message|truncatechars:70 }}</p>
+              <small>{{ req.created_at|date:"d/m/Y à H:i" }}</small>
+            </div>
+            <a href="{% url 'web:manager_requests' %}" class="btn btn-sm btn-outline-primary">Voir</a>
+          </div>
+        {% empty %}
+          <div class="empty-state py-4">
+            <i class="bi bi-check2-circle"></i>
+            <h4>Aucune demande en attente</h4>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

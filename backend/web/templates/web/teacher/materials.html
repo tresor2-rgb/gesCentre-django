@@ -1,0 +1,56 @@
+{% extends 'web/base.html' %}
+{% block title %}Supports de cours · AppCentre{% endblock %}
+{% block page_title %}Supports de cours{% endblock %}
+{% block page_subtitle %}{{ materials|length }} support{{ materials|length|pluralize }} partagé{{ materials|length|pluralize }}{% endblock %}
+
+{% block content %}
+<div class="page-actions mb-3">
+  <a href="{% url 'web:teacher_material_create' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Ajouter un support</a>
+</div>
+
+<div class="app-card">
+  {% if materials %}
+    <div class="table-responsive">
+      <table class="table table-app">
+        <thead><tr><th>Titre</th><th>Matière</th><th>Classe</th><th>Type</th><th>Publication</th><th>Date</th><th class="text-end">Actions</th></tr></thead>
+        <tbody>
+          {% for material in materials %}
+            <tr>
+              <td>
+                <strong>{{ material.title }}</strong>
+                {% if material.description %}<br><small class="text-muted">{{ material.description|truncatechars:60 }}</small>{% endif %}
+              </td>
+              <td>{{ material.subject.name }}</td>
+              <td>{{ material.class_group.name|default:"Toutes" }}</td>
+              <td>
+                {% if material.file %}<span class="badge-soft info"><i class="bi bi-file-earmark"></i> Fichier</span>{% endif %}
+                {% if material.external_link %}<span class="badge-soft primary"><i class="bi bi-link-45deg"></i> Lien</span>{% endif %}
+              </td>
+              <td>
+                {% if material.is_published %}<span class="badge-soft success">Publié</span>
+                {% else %}<span class="badge-soft warning">Brouillon</span>{% endif %}
+              </td>
+              <td>{{ material.created_at|date:"d/m/Y" }}</td>
+              <td>
+                <div class="table-actions">
+                  {% if material.file %}<a href="{{ material.file.url }}" target="_blank" rel="noopener" class="btn btn-sm btn-light" title="Ouvrir le fichier"><i class="bi bi-download"></i></a>{% endif %}
+                  {% if material.external_link %}<a href="{{ material.external_link }}" target="_blank" rel="noopener" class="btn btn-sm btn-light" title="Ouvrir le lien"><i class="bi bi-box-arrow-up-right"></i></a>{% endif %}
+                  <a href="{% url 'web:teacher_material_edit' material.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                  <a href="{% url 'web:teacher_material_delete' material.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <i class="bi bi-folder2-open"></i>
+      <h4>Aucun support</h4>
+      <p>Partagez un document ou un lien avec vos élèves.</p>
+      <a href="{% url 'web:teacher_material_create' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Ajouter un support</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
