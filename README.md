@@ -38,7 +38,7 @@ python -m venv .venv
 # Linux / macOS
 source .venv/bin/activate
 
-pip install -r backend/requirements.txt
+pip install -r requirements.txt
 cd backend
 python manage.py migrate
 python manage.py seed_demo
